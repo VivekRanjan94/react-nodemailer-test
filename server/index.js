@@ -2,6 +2,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const nodemailer = require('nodemailer')
 const PORT = 5000
 
 require('dotenv').config()
@@ -14,15 +15,28 @@ app.use(
   })
 )
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html')
-})
+app.post('/send-mail', async (req, res) => {
+  const { email, subject, body } = req.body.body
 
-app.post('/send-mail', (req, res) => {
-  console.log(req)
-  console.log('Email sent')
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USERNAME,
+      pass: process.env.GMAIL_PASSWORD,
+    },
+  })
 
-  res.send({ success: true, message: req.body })
+  const msg = {
+    from: 'Inbooks <Inbooks@noreply.com>', // sender address
+    to: `${email}`, // list of receivers
+    subject: `${subject}`, // Subject line
+    text: `${body}`, // plain text body
+  }
+  // send mail with defined transport object
+  const info = await transporter.sendMail(msg)
+
+  res.send('Email Sent!')
 })
 
 app.listen(PORT, () => {
